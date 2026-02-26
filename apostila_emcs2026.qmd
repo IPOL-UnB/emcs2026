@@ -1,0 +1,1345 @@
+---
+title: "Curso de R para Ciência Política"
+author: "Frederico Bertholini (IPOL/UnB)"
+subtitle: "Apostila — Escola de Métodos em Ciências Sociais 2026"
+lang: pt-br
+format:
+    html:
+      embed-resources: true
+      toc: true
+      toc-depth: 3
+      theme: cosmo
+      number-sections: true
+    pdf:
+      toc: true
+      toc-depth: 3
+      number-sections: true
+      geometry:
+        - margin=2cm
+      fontsize: 12pt
+      linestretch: 1.15
+      header-includes:
+        - \usepackage{titling}
+        - \pretitle{\vspace{4cm}\begin{center}\Huge\bfseries}
+        - \posttitle{\par\end{center}\vspace{1.5cm}}
+        - \preauthor{\begin{center}\Large}
+        - \postauthor{\par\end{center}\vspace{3cm}}
+        - \predate{\begin{center}\large}
+        - \postdate{\par\end{center}}
+        - \let\oldsection\section
+        - \renewcommand\section{\clearpage\oldsection}
+execute:
+  echo: true
+  eval: true
+  warning: false
+  message: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, message = FALSE, warning = FALSE)
+```
+
+# Apresentação {.unnumbered}
+
+Esta apostila foi elaborada para acompanhar o **Curso de R** oferecido na Escola de Métodos em Ciências Sociais 2026, promovida pelo Instituto de Ciência Política da Universidade de Brasília. São **15 horas** de curso, distribuídas em **5 encontros** de 3 horas.
+
+O material é autocontido: todo o código pode ser reproduzido em qualquer computador com R (≥ 4.1) e RStudio instalados. Não é necessário experiência prévia com programação, mas é desejável familiaridade com análise quantitativa em ciências sociais.
+
+**Estrutura do curso:**
+
+- **Aula 1** — Conhecendo o R: o ambiente, a lógica, os objetos fundamentais
+- **Aula 2** — Conhecendo seus Dados: importação, pacotes e fontes de dados políticos
+- **Aula 3** — Preparando e Manipulando: dplyr, tidyr, joins e limpeza
+- **Aula 4** — Visualizando e Mapeando: ggplot2, mapas com sf/geobr, pontos ideais
+- **Aula 5** — Comunicando seus Dados: Quarto, tabelas acadêmicas, reprodutibilidade
+
+:::{.callout-tip}
+## Como usar esta apostila
+
+Cada seção combina explicação conceitual com código executável. Recomenda-se digitar o código (em vez de copiar e colar) para fixar a sintaxe. Os exercícios ao final de cada aula são fundamentais para consolidar o aprendizado.
+:::
+
+---
+
+# Conhecendo o R (Aula 1)
+
+## O que é o R?
+
+R é um ambiente de programação voltado para computação estatística e produção gráfica. Criado por Ross Ihaka e Robert Gentleman nos anos 1990, tornou-se um dos softwares mais utilizados por cientistas sociais em todo o mundo, ao lado de Python.
+
+Alguns motivos que fazem do R uma ferramenta valiosa para pesquisa em ciência política:
+
+- **Software livre e gratuito**: sem custo de licença, diferente de SPSS ou Stata
+- **Comunidade ativa**: milhares de pacotes criados por pesquisadores de diversas áreas
+- **Reprodutibilidade**: o código-fonte é o próprio registro de toda a análise
+- **Versatilidade**: dados eleitorais, surveys, text mining, mapas, modelos estatísticos — tudo em um único ambiente
+- **Integração com texto**: com Quarto (sucessor do R Markdown), é possível gerar artigos, relatórios e apresentações diretamente do R
+
+:::{.callout-note}
+## Um Excel que fez mestrado?
+
+É uma forma simplificada de pensar. Se algo é possível no Excel, é possível no R. Mas se algo é possível no R — ajustar um modelo multinível, estimar pontos ideais de parlamentares, gerar mapas interativos — provavelmente não é possível no Excel.
+:::
+
+## Instalação
+
+Para acompanhar o curso, instale:
+
+1. **R** (≥ 4.1): <https://cran.r-project.org/>
+2. **RStudio Desktop** (gratuito): <https://posit.co/download/rstudio-desktop/>
+
+Alternativamente, é possível usar o [Posit Cloud](https://posit.cloud/), que roda no navegador e não exige instalação local.
+
+## O RStudio
+
+O RStudio é um ambiente de desenvolvimento integrado (IDE) que organiza o trabalho com R em quatro painéis:
+
+- **Script** (superior esquerdo): onde se escreve e salva o código
+- **Console** (inferior esquerdo): onde o código é executado e os resultados aparecem
+- **Environment** (superior direito): mostra os objetos criados na sessão
+- **Files/Plots/Help** (inferior direito): arquivos, gráficos e documentação
+
+A operação mais fundamental é: escrever uma linha no **Script** e pressionar `Ctrl + Enter` (ou `Cmd + Enter` no Mac) para executá-la no Console.
+
+## O básico: comentários e execução
+
+O símbolo `#` marca comentários no código. O R ignora tudo que vem depois de `#` na mesma linha. Comentários servem para documentar o código e facilitar sua leitura posterior.
+
+```{r}
+# Isto é um comentário — o R ignora esta linha
+
+5 + 5  # o R executa a soma, mas ignora este trecho
+```
+
+## R como calculadora
+
+O R funciona como uma calculadora poderosa. Os operadores aritméticos básicos são:
+
+```{r}
+5 + 5    # adição
+5 - 3    # subtração
+4 * 9    # multiplicação
+16 / 2   # divisão
+```
+
+Parênteses controlam a ordem das operações:
+
+```{r}
+(5 + 6) * 3  # parênteses primeiro
+
+5 + 6 * 3    # multiplicação primeiro (sem parênteses)
+```
+
+Potenciação e raiz quadrada:
+
+```{r}
+2 ^ 2      # dois ao quadrado
+
+sqrt(36)   # raiz quadrada de 36
+```
+
+## Operadores lógicos
+
+Testes lógicos retornam `TRUE` (verdadeiro) ou `FALSE` (falso). São essenciais para filtrar dados:
+
+```{r}
+5 == 5       # igualdade
+5 != 3       # diferença
+5 > 3        # maior que
+5 <= 5       # menor ou igual
+```
+
+Valores lógicos também podem ser combinados:
+
+```{r}
+# E (&): ambos precisam ser verdadeiros
+(3 == 3) & (4 != 5)
+
+# OU (|): basta um ser verdadeiro
+(3 != 3) | (4 != 5)
+```
+
+Textos também podem ser comparados:
+
+```{r}
+"Python" == "python"   # FALSE — maiúsculas importam
+"Stata" != "R"         # TRUE
+```
+
+## Criação de objetos
+
+A "setinha" `<-` atribui valores a nomes. Em R, quase tudo é um **objeto**: números, textos, tabelas, funções.
+
+```{r}
+sorte <- 5
+sorte
+```
+
+Algumas regras para nomes de objetos: letras maiúsculas e minúsculas são diferentes (`sorte` ≠ `Sorte`); nomes não podem começar com número (`15luck` dá erro); evite nomes de funções existentes (como `c`, `sum`, `data`).
+
+```{r}
+# Objetos podem ser sobrescritos
+sorte <- sorte * 2
+sorte
+```
+
+## Classes
+
+Em R, todo objeto tem uma **classe** que determina como ele se comporta. As três classes mais básicas são:
+
+```{r}
+x <- 42
+class(x)       # numeric
+
+vdd <- TRUE
+class(vdd)     # logical
+
+nome <- "Ciência Política"
+class(nome)    # character
+```
+
+A classe `factor` é especialmente importante para variáveis categóricas (partido, região, cargo):
+
+```{r}
+partido <- factor(c("PT", "PL", "MDB", "PT", "PL"))
+levels(partido)
+table(partido)
+```
+
+## Vetores
+
+Vetores são sequências de valores da mesma classe — a estrutura mais fundamental do R. A função `c()` (de "combinar") cria vetores:
+
+```{r}
+estados <- c("SP", "RJ", "MG", "BA", "RS")
+populacao <- c(46, 17, 21, 15, 11)
+length(estados)
+```
+
+Funções úteis para vetores numéricos:
+
+```{r}
+sum(populacao)
+mean(populacao)
+sd(populacao)
+range(populacao)
+```
+
+### Seleção de elementos
+
+Colchetes `[ ]` selecionam elementos por posição ou condição:
+
+```{r}
+estados[2]                   # segundo elemento
+estados[c(1, 3)]             # primeiro e terceiro
+populacao[populacao > 15]    # valores maiores que 15
+```
+
+O operador `%in%` testa pertencimento a um conjunto:
+
+```{r}
+"BA" %in% estados
+c("DF", "SP") %in% estados
+```
+
+## data.frame e tibble
+
+O `data.frame` é a tabela do R: cada coluna é uma variável, cada linha é uma observação. O `tibble` (do tidyverse) é uma versão moderna com melhor exibição:
+
+```{r}
+pacman::p_load(tidyverse)
+
+df <- tibble(
+  uf = c("SP", "RJ", "MG", "BA"),
+  populacao_milhoes = c(46, 17, 21, 15),
+  regiao = c("Sudeste", "Sudeste", "Sudeste", "Nordeste")
+)
+
+df
+```
+
+O operador `$` acessa colunas:
+
+```{r}
+df$uf
+mean(df$populacao_milhoes)
+```
+
+### Funções para explorar data.frames
+
+```{r}
+glimpse(df)    # estrutura compacta (preferível a str())
+nrow(df)       # número de linhas
+ncol(df)       # número de colunas
+names(df)      # nomes das colunas
+```
+
+## Exercícios — Aula 1
+
+1. Crie um vetor `partidos` com os nomes de 5 partidos brasileiros. Crie outro vetor `cadeiras` com o tamanho de suas bancadas (pode inventar). Calcule a média e o total de cadeiras.
+
+2. Crie um `tibble` chamado `deputados` com 4 colunas: `nome`, `partido`, `uf` e `votos`. Preencha com 6 linhas (dados fictícios). Use `glimpse()` para ver a estrutura.
+
+3. A partir do tibble `deputados`, selecione apenas os deputados com mais de 100 mil votos usando colchetes (`deputados[deputados$votos > 100000, ]`).
+
+---
+
+# Conhecendo seus Dados (Aula 2)
+
+## Pacotes no R
+
+Pacotes são extensões do R que contêm funções e dados para tarefas específicas. A instalação tradicional usa `install.packages("nome")` e a ativação usa `library(nome)`. Neste curso adotamos `pacman::p_load()`, que instala (se necessário) **e** carrega de uma vez:
+
+```{r}
+pacman::p_load(
+  tidyverse,       # manipulação + visualização
+  scales,          # formatação de eixos
+  sf, geobr,       # dados geoespaciais
+  patchwork,       # combinar gráficos
+  leaflet,         # mapas interativos
+  janitor,         # limpeza de dados
+  readxl, haven,   # importação Excel/Stata/SPSS
+  ipeadatar,        # dados do IPEA
+  broom, modelsummary,  # tabelas de regressão
+  jsonlite, httr2  # acesso a APIs
+)
+```
+
+:::{.callout-tip}
+## O tidyverse
+
+O `tidyverse` é um conjunto de pacotes integrados para ciência de dados: `dplyr` (manipulação), `ggplot2` (visualização), `tidyr` (reestruturação), `readr` (importação), `stringr` (textos), `forcats` (fatores), `purrr` (programação funcional) e `tibble`. Ao carregar `tidyverse`, todos eles são ativados de uma vez.
+:::
+
+## O pipe `|>`
+
+O pipe é o operador que transforma a forma como se lê e escreve código em R. Ele passa o resultado da esquerda como **primeiro argumento** da função à direita:
+
+```{r}
+x <- c(1, 4, 9, 16)
+
+# Sem pipe (leitura de dentro para fora):
+sqrt(sum(x))
+
+# Com pipe (leitura da esquerda para a direita):
+x |> sum() |> sqrt()
+```
+
+:::{.callout-note}
+Usamos o pipe nativo `|>` do R (disponível a partir da versão 4.1), não o `%>%` do pacote `magrittr`. A funcionalidade é essencialmente a mesma, mas o pipe nativo é mais rápido e não exige pacote adicional.
+:::
+
+## Importação de dados
+
+No tidyverse, cada formato de arquivo tem sua função de leitura:
+
+| Formato | Função | Pacote |
+|---------|--------|--------|
+| `.csv` | `read_csv()` | readr |
+| `.xlsx` | `read_xlsx()` | readxl |
+| `.dta` (Stata) | `read_dta()` | haven |
+| `.sav` (SPSS) | `read_sav()` | haven |
+| `.rds` | `read_rds()` | readr |
+
+```{r}
+#| eval: false
+
+# Exemplos de importação:
+dados <- read_csv("dados/eleicoes.csv")
+dados <- read_xlsx("dados/municipios.xlsx")
+dados <- read_rds("dados/votacoes.rds")
+```
+
+:::{.callout-tip}
+## Caminhos relativos
+
+Sempre use **caminhos relativos** (ex: `"dados/arquivo.csv"`) em vez de caminhos absolutos (ex: `"/home/fred/projeto/dados/arquivo.csv"`). Isso torna o projeto reprodutível em qualquer computador. O **RProject** (`.Rproj`) define automaticamente o diretório de trabalho.
+:::
+
+## Fontes de dados para Ciência Política
+
+O R oferece acesso direto a diversas fontes relevantes para pesquisa em ciência política:
+
+### electionsBR — Dados eleitorais do TSE
+
+```{r}
+#| eval: false
+
+pacman::p_load(electionsBR)
+
+# Candidaturas do DF em 2022
+candidatos_df <- candidate_fed(year = 2022, uf = "DF")
+glimpse(candidatos_df)
+```
+
+### API da Câmara dos Deputados
+
+A Câmara dos Deputados disponibiliza uma API REST com dados de votações, deputados e proposições. Usamos o pacote `httr2` para acessá-la:
+
+```{r}
+#| eval: false
+
+# Buscar votações de agosto/2024
+url <- "https://dadosabertos.camara.leg.br/api/v2/votacoes"
+
+resp <- request(url) |>
+  req_url_query(
+    dataInicio = "2024-08-01",
+    dataFim = "2024-08-31"
+  ) |>
+  req_perform()
+
+votacoes <- resp |>
+  resp_body_json() |>
+  pluck("dados")
+```
+
+:::{.callout-note}
+APIs (Application Programming Interfaces) são interfaces que permitem acessar dados diretamente de servidores. A API da Câmara é pública e não exige autenticação. A documentação completa está em: <https://dadosabertos.camara.leg.br/swagger/api.html>
+:::
+
+### Outras fontes úteis
+
+| Fonte | Pacote / URL | Dados |
+|-------|------|-------|
+| TSE | `electionsBR` | Eleições, candidaturas, prestação de contas |
+| IBGE / SIDRA | `sidrar` | Censo, PNAD, indicadores municipais |
+| IPEA | `ipeadatar` | Séries históricas, IDH |
+| CEPESPDATA | `cepespR` | Dados eleitorais compilados |
+| Câmara/Senado | `httr2` + API | Votações nominais, proposições |
+| V-Dem | `vdemdata` | Indicadores de democracia |
+| LAPOP | download | Surveys de opinião pública |
+
+## Explorando dados: funções essenciais
+
+Ao importar uma base de dados, o primeiro passo é sempre conhecê-la:
+
+```{r}
+#| eval: false
+
+glimpse(dados)          # estrutura compacta
+head(dados, 10)         # primeiras 10 linhas
+dim(dados)              # (linhas, colunas)
+names(dados)            # nomes das variáveis
+n_distinct(dados$uf)    # contagem de valores únicos
+summary(dados$idhm)     # estatísticas descritivas
+```
+
+## Nosso dataset de trabalho
+
+Neste curso, vamos trabalhar com um dataset real de municípios brasileiros contendo variáveis típicas de análise em ciência política. O arquivo `municipios_br.csv` está na pasta `dados/` do projeto e contém informações dos 5.570 municípios do Brasil.
+
+Para ler o arquivo, usamos a função `read_csv()` do pacote `readr` (parte do tidyverse):
+
+```{r}
+municipios <- read_csv("dados/municipios_br.csv")
+```
+
+O dataset contém as seguintes variáveis: `cod_ibge` (código IBGE do município), `municipio` (nome), `uf` (unidade federativa), `regiao`, `populacao`, `idhm` (Índice de Desenvolvimento Humano Municipal), `pib_per_capita`, `gini` (índice de desigualdade), `perc_votos_gov` (percentual de votos no governo) e `taxa_comparecimento`.
+
+Essas variáveis permitem explorar correlações plausíveis: municípios com IDHM mais alto tendem a votar menos no governo; a região Nordeste apresenta maior apoio governista; PIB per capita varia com distribuição assimétrica.
+
+```{r}
+glimpse(municipios)
+```
+
+## Exercícios — Aula 2
+
+1. Use `summary()` para examinar a distribuição das variáveis numéricas de `municipios`. Que padrões você observa?
+
+2. Acesse a documentação da API da Câmara dos Deputados (<https://dadosabertos.camara.leg.br>) e identifique qual endpoint retorna a lista de deputados em exercício.
+
+3. Pesquise um pacote do R que acesse dados de uma fonte relevante para seu tema de pesquisa. Instale com `pacman::p_load()` e explore a documentação.
+
+---
+
+# Preparando e Manipulando seus Dados (Aula 3)
+
+## As cinco funções do dplyr
+
+O pacote `dplyr` oferece uma gramática consistente para manipulação de dados. Cinco funções cobrem a maioria das operações:
+
+| Função | O que faz |
+|--------|-----------|
+| `select()` | Seleciona **colunas** |
+| `filter()` | Filtra **linhas** por condição |
+| `mutate()` | Cria ou modifica **colunas** |
+| `summarise()` | Resume dados em estatísticas |
+| `arrange()` | Ordena **linhas** |
+
+Todas seguem a mesma estrutura: o primeiro argumento é o data.frame (que recebemos via pipe) e os demais são as operações.
+
+## `select()` — escolhendo colunas
+
+```{r}
+municipios |>
+  select(municipio, uf, regiao, idhm)
+```
+
+Variações úteis com funções auxiliares:
+
+```{r}
+# Colunas cujo nome começa com "perc"
+municipios |>
+  select(starts_with("perc"))
+
+# Todas exceto populacao e gasto
+municipios |>
+  select(-populacao, -gini)
+```
+
+Outras funções auxiliares: `ends_with()`, `contains()`, `matches()` (aceita regex), `where()` (por tipo de coluna).
+
+```{r}
+# Apenas colunas numéricas
+municipios |>
+  select(where(is.numeric))
+```
+
+## `filter()` — filtrando linhas
+
+```{r}
+# Municípios do Nordeste com IDH acima de 0.7
+municipios |>
+  filter(regiao == "Nordeste", idhm > 0.7)
+```
+
+Múltiplas condições separadas por vírgula funcionam como **E** (`&`). Para **OU**, use `|`:
+
+```{r}
+# Sudeste ou Sul
+municipios |>
+  filter(regiao == "Sudeste" | regiao == "Sul") |>
+  head(5)
+```
+
+O operador `%in%` simplifica múltiplos testes:
+
+```{r}
+# Três estados específicos
+municipios |>
+  filter(uf %in% c("SP", "RJ", "MG")) |>
+  select(municipio, uf, perc_votos_gov) |>
+  head(8)
+```
+
+## `mutate()` — criando e modificando colunas
+
+```{r}
+municipios |>
+  mutate(
+    margem_vitoria = abs(perc_votos_gov - 50),
+    competitivo = margem_vitoria < 10,
+    faixa_idh = case_when(
+      idhm < 0.55 ~ "Muito Baixo",
+      idhm < 0.70 ~ "Baixo",
+      idhm < 0.80 ~ "Médio",
+      TRUE       ~ "Alto"
+    )
+  ) |>
+  select(municipio, margem_vitoria, competitivo, faixa_idh) |>
+  head(8)
+```
+
+A função `case_when()` é a versão tidyverse do `ifelse()` aninhado — muito mais legível quando há múltiplas condições.
+
+### Funções úteis dentro de `mutate()`
+
+```{r}
+municipios |>
+  mutate(
+    log_pop = log(populacao),
+    idhm_padronizado = (idhm - mean(idhm)) / sd(idhm),
+    ranking_idhm = min_rank(desc(idhm)),
+    uf_maiuscula = toupper(uf)
+  ) |>
+  select(municipio, log_pop, idhm_padronizado, ranking_idhm) |>
+  head(6)
+```
+
+## `summarise()` + `group_by()`
+
+`summarise()` reduz o data.frame a uma única linha de resumo. Combinado com `group_by()`, calcula estatísticas por grupo:
+
+```{r}
+municipios |>
+  group_by(regiao) |>
+  summarise(
+    n = n(),
+    idhm_medio = mean(idhm) |> round(3),
+    idhm_dp = sd(idhm) |> round(3),
+    voto_gov_medio = mean(perc_votos_gov) |> round(1),
+    comparecimento = mean(taxa_comparecimento) |> round(2)
+  )
+```
+
+### `count()` — atalho poderoso
+
+```{r}
+municipios |>
+  count(regiao, sort = TRUE)
+```
+
+Equivale a `group_by(regiao) |> summarise(n = n()) |> arrange(desc(n))`.
+
+### Múltiplas variáveis de agrupamento
+
+```{r}
+municipios |>
+  mutate(faixa_idh = cut(idhm, breaks = c(0, 0.6, 0.75, 1),
+                          labels = c("Baixo","Médio","Alto"))) |>
+  group_by(regiao, faixa_idh) |>
+  summarise(
+    n = n(),
+    voto_medio = mean(perc_votos_gov) |> round(1),
+    .groups = "drop"
+  )
+```
+
+## `arrange()` — ordenando
+
+```{r}
+municipios |>
+  select(municipio, uf, idhm) |>
+  arrange(desc(idhm)) |>
+  head(5)
+```
+
+## tidyr: reestruturando dados
+
+Enquanto o `dplyr` faz recortes e cálculos, o `tidyr` muda o **formato** da tabela. As operações centrais vêm em pares inversos:
+
+- `pivot_longer()` e `pivot_wider()`
+- `separate()` e `unite()`
+- `nest()` e `unnest()`
+
+### Dados "tidy"
+
+Um dataset está no formato **tidy** quando: cada variável é uma coluna, cada observação é uma linha e cada valor ocupa uma célula.
+
+### `pivot_wider()` — espalhando valores em colunas
+
+```{r}
+# Votação média por região e faixa de IDH — formato wide
+votos_wide <- municipios |>
+  mutate(faixa_idh = cut(idhm, breaks = c(0, 0.6, 0.75, 1),
+                          labels = c("Baixo","Médio","Alto"))) |>
+  group_by(regiao, faixa_idh) |>
+  summarise(voto_medio = mean(perc_votos_gov) |> round(1), .groups = "drop") |>
+  pivot_wider(names_from = faixa_idh, values_from = voto_medio)
+
+votos_wide
+```
+
+### `pivot_longer()` — empilhando colunas
+
+```{r}
+votos_wide |>
+  pivot_longer(-regiao, names_to = "faixa_idh", values_to = "voto_medio")
+```
+
+### `separate()` e `unite()`
+
+```{r}
+# Simulando dados de candidaturas com cargo e UF combinados
+candidaturas <- tibble(
+  id = 1:6,
+  cargo_uf = c("Dep.Federal-SP", "Senador-RJ", "Dep.Estadual-MG",
+               "Dep.Federal-BA", "Senador-RS", "Dep.Federal-PE")
+)
+
+# Separando em duas colunas
+candidaturas |>
+  separate(cargo_uf, into = c("cargo", "uf"), sep = "-")
+```
+
+A operação inversa:
+
+```{r}
+candidaturas |>
+  separate(cargo_uf, into = c("cargo", "uf"), sep = "-") |>
+  unite("cargo_uf_novo", cargo, uf, sep = " / ")
+```
+
+## Joins: juntando tabelas
+
+Dados relacionais são a regra em ciência política: uma tabela com informações de deputados, outra com suas votações, outra com dados dos partidos. Para conectá-las, usamos **joins** — operações que combinam tabelas com base em colunas-chave comuns.
+
+```{r}
+# Duas tabelas com chave comum: "partido"
+bancadas <- tibble(
+  partido = c("PT", "PL", "MDB", "PSOL", "PP"),
+  tamanho = c(68, 99, 44, 12, 50)
+)
+
+posicao <- tibble(
+  partido = c("PT", "PL", "PSOL", "UNIÃO"),
+  campo = c("Governo", "Oposição", "Governo", "Oposição")
+)
+```
+
+### `left_join()` — o join preferencial
+
+Mantém **todas** as linhas da tabela da esquerda e adiciona as informações da direita quando houver correspondência:
+
+```{r}
+bancadas |>
+  left_join(posicao, by = "partido")
+```
+
+MDB e PP ficaram com `NA` em `campo` porque não estão na tabela `posicao`. Isso é informativo: indica que esses partidos não foram classificados.
+
+### Outros tipos de join
+
+```{r}
+# inner_join: apenas correspondências
+bancadas |> inner_join(posicao, by = "partido")
+```
+
+```{r}
+# anti_join: linhas de x que NÃO estão em y
+bancadas |> anti_join(posicao, by = "partido")
+```
+
+```{r}
+# full_join: tudo de ambos
+bancadas |> full_join(posicao, by = "partido")
+```
+
+:::{.callout-tip}
+## Regra prática
+
+Sempre prefira `left_join()`. Ele preserva todas as observações da tabela principal e evidencia quando não há correspondência (preenchendo com `NA`). Isso é mais seguro do que um `inner_join()`, que silenciosamente descarta observações.
+:::
+
+## Limpeza de dados
+
+### Padronização de nomes com janitor
+
+```{r}
+# Exemplo com nomes de colunas despadronizados
+dados_sujos <- tibble(
+  `Nome do Candidato` = c("Ana", "Beto"),
+  `% Votos Válidos` = c(52.3, 47.7),
+  `UF (Sigla)` = c("SP", "RJ")
+)
+
+dados_sujos |>
+  janitor::clean_names()
+```
+
+### Identificação de duplicatas
+
+```{r}
+# Criar dados com duplicata para exemplo
+dados_com_dup <- tibble(
+  municipio = c("A", "B", "A", "C"),
+  uf = c("SP", "RJ", "SP", "MG"),
+  votos = c(100, 200, 100, 300)
+)
+
+# Encontrar duplicatas
+dados_com_dup |>
+  janitor::get_dupes(municipio, uf)
+
+# Remover duplicatas
+dados_com_dup |>
+  distinct(municipio, uf, .keep_all = TRUE)
+```
+
+### Valores ausentes
+
+```{r}
+# Contar NAs por coluna
+municipios |>
+  summarise(across(everything(), ~ sum(is.na(.x))))
+```
+
+:::{.callout-note}
+## Dados faltantes em ciência política
+
+Valores ausentes (`NA`) não são necessariamente erros. Em dados eleitorais, por exemplo, candidatos que não declararam patrimônio terão `NA` nessa coluna. A decisão sobre como tratar dados faltantes (excluir, imputar, manter) é uma escolha metodológica que deve ser justificada.
+:::
+
+## Exercícios — Aula 3
+
+1. A partir de `municipios`, crie uma variável `faixa_idh` (Baixo < 0.6, Médio 0.6-0.75, Alto > 0.75). Agrupe por `regiao` e `faixa_idh`, calcule o voto médio no governo e o número de municípios. Ordene por voto médio decrescente.
+
+2. Crie uma tabela no formato *wide* que mostre a taxa de comparecimento média por região e UF, com as UFs nas colunas.
+
+3. Crie duas tabelas: uma de partidos com seus campos ideológicos (esquerda/centro/direita) e outra de partidos com número de cadeiras. Faça um `left_join()` e identifique quais partidos ficaram sem classificação.
+
+4. Pesquise e aplique `janitor::tabyl()` para criar uma tabela de frequências cruzadas de `regiao` e a `faixa_idh` criada no exercício 1.
+
+---
+
+# Visualizando e Mapeando seus Dados (Aula 4)
+
+## ggplot2: a gramática dos gráficos
+
+O pacote `ggplot2` implementa a "gramática dos gráficos" de Leland Wilkinson: toda visualização é construída pela combinação de camadas. A estrutura básica é:
+
+```{r}
+#| eval: false
+
+ggplot(dados, aes(x = ..., y = ..., color = ...)) +
+  geom_tipo() +
+  labs(title = "...", x = "...", y = "...") +
+  theme_minimal()
+```
+
+Os elementos são: **dados** (de onde vêm as informações), **estéticas** (mapeamento de variáveis a propriedades visuais), **geometrias** (tipo de marca gráfica), **escalas** (ajustes nas estéticas), **temas** (aparência geral) e **facetas** (subgráficos).
+
+## Uma boa exibição gráfica deve...
+
+Edward Tufte, referência em visualização de dados, propõe que um bom gráfico deve: mostrar os dados, induzir o observador a pensar na substância (não na metodologia), evitar distorções, tornar grandes conjuntos de dados coerentes, encorajar comparações entre partes dos dados e revelar diferentes níveis de detalhe.
+
+Quatro princípios práticos: miniaturas múltiplas (small multiples), menor diferença efetiva, causalidade (respondendo "comparado com o quê?") e contexto.
+
+## Recursos para ggplot2
+
+Antes de avançar, vale conhecer os recursos de referência:
+
+- [R Graphics Cookbook](https://r-graphics.org/) — receitas práticas
+- [R Graph Gallery](https://www.r-graph-gallery.com/) — galeria com código
+- [Fundamentals of Data Visualization](https://clauswilke.com/dataviz/) — princípios
+- [Extensões do ggplot2](https://exts.ggplot2.tidyverse.org/gallery/) — pacotes adicionais
+
+## Gráfico de barras
+
+```{r}
+municipios |>
+  group_by(regiao) |>
+  summarise(voto_medio = mean(perc_votos_gov)) |>
+  ggplot(aes(x = reorder(regiao, voto_medio), y = voto_medio, fill = regiao)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "Votação Média no Governo por Região",
+       x = "", y = "% Votos no Governo") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+Note o uso de `reorder()` para ordenar as barras pelo valor — muito mais informativo do que ordem alfabética.
+
+### Dispersão: Bases Socioeconômicas do Voto
+
+A literatura de comportamento político investiga como o desenvolvimento local afeta o apoio a governos incumbentes. Podemos examinar essa relação cruzando o IDHM dos municípios com a proporção de votos no governo.
+
+```{r}
+municipios |>
+  ggplot(aes(x = idhm, y = perc_votos_gov, color = regiao)) +
+  geom_point(alpha = 0.5) +
+  geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "dashed") +
+  labs(title = "Desenvolvimento local e apoio ao incumbente",
+       x = "IDHM", y = "% Votos no Governo", color = "Região") +
+  theme_minimal()
+```
+
+## Histograma
+
+```{r}
+municipios |>
+  ggplot(aes(x = perc_votos_gov, fill = regiao)) +
+  geom_histogram(bins = 30, alpha = 0.6, position = "identity") +
+  labs(title = "Distribuição da Votação no Governo",
+       x = "% Votos", y = "Frequência", fill = "Região") +
+  theme_minimal()
+```
+
+## Boxplot com facetas
+
+As facetas (`facet_wrap`) permitem criar subgráficos por categorias — o que Tufte chama de "small multiples":
+
+```{r}
+municipios |>
+  mutate(faixa_idh = cut(idhm, breaks = c(0, 0.6, 0.75, 1),
+                          labels = c("Baixo","Médio","Alto"))) |>
+  ggplot(aes(x = faixa_idh, y = perc_votos_gov, fill = faixa_idh)) +
+  geom_boxplot(alpha = 0.7) +
+  facet_wrap(~regiao) +
+  labs(title = "Distribuição do Voto por IDH e Região",
+       x = "Faixa de IDH", y = "% Votos no Governo") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+## Heatmap
+
+```{r}
+municipios |>
+  mutate(faixa_idh = cut(idhm, breaks = c(0, 0.6, 0.75, 1),
+                          labels = c("Baixo","Médio","Alto"))) |>
+  group_by(regiao, faixa_idh) |>
+  summarise(voto_medio = mean(perc_votos_gov), .groups = "drop") |>
+  ggplot(aes(x = faixa_idh, y = regiao, fill = voto_medio)) +
+  geom_tile(color = "white") +
+  geom_text(aes(label = round(voto_medio, 1)), color = "white", fontface = "bold") +
+  scale_fill_gradient2(low = "steelblue", mid = "white", high = "firebrick",
+                       midpoint = 50) +
+  labs(title = "Votação Média: Região × IDH", x = "Faixa IDH", y = "") +
+  theme_minimal()
+```
+
+## Escalas
+
+Escalas controlam como as variáveis são mapeadas visualmente. Escalas divergentes (com ponto central) são especialmente úteis para dados eleitorais:
+
+```{r}
+municipios |>
+  ggplot(aes(x = idhm, y = pib_per_capita, color = perc_votos_gov)) +
+  geom_point(alpha = 0.6, size = 2) +
+  scale_color_gradient2(low = "steelblue", mid = "white", high = "firebrick",
+                        midpoint = 50, name = "% Voto Gov") +
+  scale_y_log10(labels = scales::dollar_format(prefix = "R$ ")) +
+  labs(title = "PIB per Capita, IDHM e Voto",
+       x = "IDHM", y = "PIB per Capita (escala log)") +
+  theme_minimal()
+```
+
+## Combinando gráficos com patchwork
+
+O pacote `patchwork` permite combinar gráficos com operadores simples: `+` coloca lado a lado, `/` empilha, `|` separa em colunas.
+
+```{r}
+p1 <- municipios |>
+  ggplot(aes(x = idhm, y = perc_votos_gov)) +
+  geom_point(alpha = 0.3) + geom_smooth(method = "lm") +
+  labs(title = "IDH × Voto", x = "IDHM", y = "% Gov") + theme_minimal()
+
+p2 <- municipios |>
+  ggplot(aes(x = regiao, fill = regiao)) +
+  geom_bar() + coord_flip() +
+  labs(title = "Municípios por Região", x = "", y = "N") +
+  theme_minimal() + theme(legend.position = "none")
+
+p1 + p2 + plot_annotation(title = "Dashboard Eleitoral")
+```
+
+## Mapas: `sf` + `geobr`
+
+O pacote `sf` (Simple Features) é o padrão para dados geoespaciais no R. Ele trata mapas como data.frames com uma coluna especial de geometria. O pacote `geobr` disponibiliza as malhas geográficas oficiais do IBGE.
+
+```{r}
+# Baixar malha dos estados brasileiros
+estados_br <- read_state(year = 2020, showProgress = FALSE)
+```
+
+```{r}
+# Verificar a estrutura
+glimpse(estados_br)
+```
+
+### Mapa coroplético: votação por estado
+
+Para criar um mapa temático, basta fazer um `left_join` entre a malha geográfica e seus dados:
+
+```{r}
+dados_uf <- municipios |>
+  group_by(uf) |>
+  summarise(voto_medio = mean(perc_votos_gov), .groups = "drop")
+
+mapa <- estados_br |>
+  left_join(dados_uf, by = c("abbrev_state" = "uf"))
+
+ggplot(mapa) +
+  geom_sf(aes(fill = voto_medio), color = "white", linewidth = 0.2) +
+  scale_fill_gradient2(low = "steelblue", mid = "white", high = "firebrick",
+                       midpoint = 50, name = "% Gov") +
+  theme_void() +
+  labs(title = "Votação Média no Governo por Estado")
+```
+
+### CRS — Sistema de Referência de Coordenadas
+
+Todo dado geoespacial precisa de um CRS (Coordinate Reference System). Os dois mais comuns no Brasil:
+
+- **EPSG:4326** — coordenadas geográficas (latitude/longitude), usado em mapas temáticos e GPS
+- **EPSG:5880** — projeção métrica (metros), necessário para cálculos de distância e área
+
+```{r}
+# Verificar CRS de um objeto sf
+st_crs(estados_br)
+
+# Reprojetar para CRS métrico (necessário para st_buffer, st_distance)
+estados_metrico <- estados_br |>
+  st_transform(5880)
+```
+
+### Mapa com capitais — pontos sobre polígonos
+
+```{r}
+# Malha de municípios e capitais
+capitais_geo <- read_municipal_seat(showProgress = FALSE)
+```
+
+```{r}
+ggplot() +
+  geom_sf(data = estados_br, fill = "grey95", color = "grey60") +
+  geom_sf(data = capitais_geo, color = "firebrick", size = 1.5, alpha = 0.7) +
+  theme_void() +
+  labs(title = "Capitais Brasileiras")
+```
+
+## Pontos Ideais: análise espacial do comportamento político
+
+### A intuição
+
+Se observarmos como parlamentares **votam** em diversas matérias, podemos inferir suas **posições ideológicas** em um espaço latente. O método mais influente para isso é o **DW-NOMINATE** (Poole & Rosenthal), que, a partir de centenas de votações nominais, estima onde cada parlamentar se localiza num eixo ideológico.
+
+No contexto brasileiro, o primeiro eixo costuma capturar a dimensão **governo-oposição** (mais do que esquerda-direita), como demonstrado por Zucco & Lauderdale (2011).
+
+Vamos implementar uma versão simplificada usando PCA (Análise de Componentes Principais) sobre uma matriz de votações simuladas.
+
+### Simulando votações nominais
+
+```{r}
+set.seed(2025)
+n_parl <- 40
+n_vot <- 80
+
+# Posições ideológicas "verdadeiras"
+posicao_ideal <- c(
+  rnorm(10, -1.5, 0.3),   # esquerda
+  rnorm(10, -0.3, 0.4),   # centro-esquerda
+  rnorm(10,  0.5, 0.4),   # centro-direita
+  rnorm(10,  1.5, 0.3)    # direita
+)
+bloco <- rep(c("Esquerda","Centro-Esq","Centro-Dir","Direita"), each = 10)
+
+# Simular votos: probabilidade de votar Sim depende da posição vs. ponto de corte
+pontos_corte <- runif(n_vot, -2, 2)
+votos_mat <- matrix(NA, n_parl, n_vot)
+for(j in 1:n_vot) {
+  votos_mat[, j] <- rbinom(n_parl, 1, plogis(2 * (posicao_ideal - pontos_corte[j])))
+}
+```
+
+A lógica é: cada votação tem um "ponto de corte" no eixo ideológico. Parlamentares cuja posição está acima do corte têm maior probabilidade de votar **Sim**. A função `plogis()` transforma a distância entre posição e corte em uma probabilidade entre 0 e 1.
+
+### Estimando pontos ideais via PCA
+
+```{r}
+pca <- prcomp(votos_mat, center = TRUE, scale. = TRUE)
+
+pontos <- tibble(
+  bloco = bloco,
+  posicao_real = posicao_ideal,
+  pc1 = pca$x[, 1],
+  pc2 = pca$x[, 2]
+)
+```
+
+### Mapa do Plenário
+
+```{r}
+ggplot(pontos, aes(x = pc1, y = pc2, color = bloco)) +
+  geom_point(size = 3, alpha = 0.8) +
+  scale_color_manual(values = c("Esquerda" = "red", "Centro-Esq" = "salmon",
+                                 "Centro-Dir" = "lightblue", "Direita" = "darkblue")) +
+  geom_vline(xintercept = 0, linetype = "dashed", alpha = 0.3) +
+  labs(title = "Mapa Espacial do Plenário",
+       subtitle = "Pontos ideais estimados via PCA sobre votações simuladas",
+       x = "1ª Dimensão (Gov-Oposição)", y = "2ª Dimensão", color = "Bloco") +
+  theme_minimal()
+```
+
+### Validação: posição real vs. estimada
+
+```{r}
+ggplot(pontos, aes(x = posicao_real, y = pc1, color = bloco)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = FALSE, color = "grey30", linetype = "dashed") +
+  scale_color_manual(values = c("Esquerda" = "red", "Centro-Esq" = "salmon",
+                                 "Centro-Dir" = "lightblue", "Direita" = "darkblue")) +
+  labs(title = "Posição Real vs. Estimada",
+       x = "Posição Ideológica Real", y = "PC1 (estimada)", color = "Bloco") +
+  theme_minimal()
+```
+
+A correlação entre as posições reais e estimadas demonstra que o PCA, mesmo sendo uma técnica simples, recupera bem a estrutura latente das votações.
+
+### Com dados reais: API da Câmara
+
+Na prática, para estimar pontos ideais a partir de dados reais da Câmara dos Deputados, o procedimento envolve quatro passos:
+
+```{r}
+#| eval: false
+
+# Passo 1: coletar votações de um período
+url_base <- "https://dadosabertos.camara.leg.br/api/v2"
+
+resp_votacoes <- request(paste0(url_base, "/votacoes")) |>
+  req_url_query(dataInicio = "2024-08-01", dataFim = "2024-12-31",
+                ordem = "ASC", ordenarPor = "dataHoraRegistro") |>
+  req_perform()
+
+lista_votacoes <- resp_votacoes |>
+  resp_body_json() |>
+  pluck("dados") |>
+  map_chr(~ .x$id)
+
+# Passo 2: para cada votação, coletar os votos individuais
+coletar_votos <- function(id_votacao) {
+  url <- paste0(url_base, "/votacoes/", id_votacao, "/votos")
+  resp <- request(url) |> req_perform()
+  resp |>
+    resp_body_json() |>
+    pluck("dados") |>
+    map_dfr(~ tibble(
+      deputado = .x$deputado_$nome,
+      partido  = .x$deputado_$siglaPartido,
+      voto     = .x$tipoVoto
+    )) |>
+    mutate(id_votacao = id_votacao)
+}
+
+todos_votos <- map_dfr(lista_votacoes, coletar_votos)
+
+# Passo 3: construir matriz deputado × votação
+matriz_votos <- todos_votos |>
+  mutate(voto_num = case_when(
+    voto == "Sim" ~ 1,
+    voto == "Não" ~ 0,
+    TRUE ~ NA_real_
+  )) |>
+  select(deputado, id_votacao, voto_num) |>
+  pivot_wider(names_from = id_votacao, values_from = voto_num) |>
+  column_to_rownames("deputado")
+
+# Passo 4: PCA nos votos (removendo NAs)
+matriz_limpa <- matriz_votos |>
+  select(where(~ mean(is.na(.x)) < 0.3)) |>
+  drop_na()
+
+pca_real <- prcomp(matriz_limpa, center = TRUE, scale. = TRUE)
+```
+
+:::{.callout-note}
+## Alternativas ao PCA
+
+Para estimações mais sofisticadas de pontos ideais, existem pacotes dedicados como `wnominate` (implementação R do DW-NOMINATE) e `pscl` (ideal points bayesianos). Para o contexto brasileiro, a referência é Zucco & Lauderdale (2011), que aplicam modelos IRT (Item Response Theory) às votações da Câmara.
+:::
+
+## Exercícios — Aula 4
+
+1. Crie um gráfico de dispersão de `taxa_comparecimento` (x) por `perc_votos_gov` (y), colorindo por `regiao`. Adicione `geom_smooth(method = "lm")` para cada região. O que você observa?
+
+2. Crie um mapa coroplético do Brasil com o IDH médio por estado (use os dados de `municipios`). Escolha uma paleta de cores adequada.
+
+3. Modifique o código de pontos ideais para simular 60 parlamentares em 3 blocos (governo, independente, oposição) e 120 votações. Plote o mapa do plenário e compare com a versão de 4 blocos.
+
+4. Usando `patchwork`, combine o mapa do exercício 2 com o gráfico de barras por região em uma única composição.
+
+---
+
+# Comunicando seus Dados (Aula 5)
+
+## Quarto: a evolução do R Markdown
+
+Quarto é o sistema de publicação científica e técnica do ecossistema R/RStudio. Ele permite integrar código, texto e resultados em um único documento, gerando saídas em múltiplos formatos: HTML, PDF, Word, slides e até sites completos.
+
+Estas slides e esta apostila foram feitos em Quarto.
+
+### Estrutura de um documento Quarto
+
+Um arquivo `.qmd` tem três componentes:
+
+1. **Cabeçalho YAML** (entre `---`): metadados do documento (título, autor, formato)
+2. **Texto em Markdown**: prosa usando sintaxe simples de formatação
+3. **Chunks de código** (entre `` ```{r} `` e `` ``` ``): blocos de código R executáveis
+
+```yaml
+---
+title: "Meu Artigo"
+author: "Seu Nome"
+format: pdf
+---
+
+## Introdução
+
+Texto aqui, com código integrado:
+```
+
+### Formatos de saída
+
+| Formato | Uso | Cabeçalho YAML |
+|---------|-----|----------------|
+| HTML | Web, blogs | `format: html` |
+| PDF | Artigos, relatórios | `format: pdf` |
+| Word | Fluxos Office | `format: docx` |
+| revealjs | Apresentações | `format: revealjs` |
+
+### Opções de chunk
+
+As opções de chunk controlam como cada bloco de código é processado. No Quarto, usam-se comentários especiais com `#|`:
+
+```{r}
+#| eval: false
+
+#| echo: false          # esconde o código, mostra resultado
+#| eval: false           # não executa o código
+#| warning: false        # esconde avisos
+#| fig-cap: "Legenda"    # legenda da figura
+#| fig-width: 8          # largura da figura
+#| fig-height: 5         # altura da figura
+#| cache: true           # armazena resultado em cache
+```
+
+## Tabelas com `knitr::kable()`
+
+Para tabelas simples em documentos:
+
+```{r}
+municipios |>
+  group_by(regiao) |>
+  summarise(
+    n = n(),
+    idhm_medio = mean(idhm) |> round(3),
+    voto_medio = mean(perc_votos_gov) |> round(1)
+  ) |>
+  knitr::kable(col.names = c("Região", "N", "IDHM Médio", "% Voto Gov"))
+```
+
+## Tabelas de regressão com `modelsummary`
+
+O pacote `modelsummary` produz tabelas de regressão em formato acadêmico, compatíveis com os padrões de periódicos de ciência política:
+
+```{r}
+modelo1 <- lm(perc_votos_gov ~ idhm, data = municipios)
+modelo2 <- lm(perc_votos_gov ~ idhm + log(populacao), data = municipios)
+modelo3 <- lm(perc_votos_gov ~ idhm + log(populacao) + pib_per_capita + regiao,
+              data = municipios)
+
+modelsummary(
+  list("Bivariado" = modelo1, "Controle Pop." = modelo2, "Completo" = modelo3),
+  stars = TRUE,
+  gof_omit = "AIC|BIC|Log|RMSE",
+  title = "Determinantes do Voto no Governo"
+)
+```
+
+:::{.callout-tip}
+## Alternativas para tabelas
+
+Além de `modelsummary`, o pacote `stargazer` é bastante usado na ciência política. A vantagem do `modelsummary` é sua compatibilidade nativa com Quarto e com diversos formatos de saída (HTML, LaTeX, Word).
+:::
+
+## Referências bibliográficas com BibTeX
+
+Quarto permite citar referências bibliográficas usando arquivos `.bib`. No cabeçalho YAML:
+
+```yaml
+---
+title: "Meu Artigo"
+bibliography: referencias.bib
+csl: apsa.csl
+---
+```
+
+No texto, use `@chave` para citações parentéticas e `[@chave]` para citações em texto. O Quarto gera automaticamente a lista de referências ao final do documento.
+
+Exemplo de entrada no arquivo `.bib`:
+
+```bibtex
+@book{king1994,
+  author    = {King, Gary and Keohane, Robert O. and Verba, Sidney},
+  title     = {Designing Social Inquiry: Scientific Inference in Qualitative Research},
+  publisher = {Princeton University Press},
+  year      = {1994}
+}
+```
+
+## Reprodutibilidade: regras de ouro
+
+A reprodutibilidade é um pilar da ciência. Em pesquisa quantitativa, isso significa que qualquer pessoa com acesso aos mesmos dados e código deve obter os mesmos resultados. Cinco práticas fundamentais:
+
+1. **`set.seed()`** antes de qualquer operação com aleatoriedade — garante que simulações e amostras sejam replicáveis
+2. **Caminhos relativos** — nunca use `/home/fred/...`; use `"dados/arquivo.csv"`
+3. **RProjects** (`.Rproj`) — define automaticamente o diretório de trabalho
+4. **`pacman::p_load()`** — centraliza o gerenciamento de pacotes no topo do script
+5. **Quarto** — integra código e texto num fluxo único de trabalho
+
+## Organização de projetos
+
+Uma boa estrutura de pastas é essencial para projetos reprodutíveis:
+
+```
+meu_projeto/
+├── meu_projeto.Rproj
+├── dados/
+│   ├── brutos/
+│   └── processados/
+├── scripts/
+│   ├── 01_limpeza.R
+│   ├── 02_analise.R
+│   └── 03_visualizacao.R
+├── resultados/
+│   ├── figuras/
+│   └── tabelas/
+└── relatorio.qmd
+```
+
+:::{.callout-note}
+## O princípio RAP
+
+RAP (Reproducible Analytical Pipelines) é a ideia de que toda análise deve funcionar como um pipeline: dados brutos entram, resultados finais saem, sem intervenção manual no meio. No R, ferramentas como `targets` automatizam esse fluxo.
+:::
+
+## Git e GitHub
+
+Git é um sistema de controle de versão que registra todas as alterações feitas em seus arquivos. GitHub é a plataforma online que hospeda repositórios Git, permitindo backup, colaboração e publicação.
+
+O RStudio tem integração nativa com Git — a aba "Git" no painel superior direito permite fazer commits, push e pull sem sair do IDE.
+
+Para aprender a configurar: [Happy Git with R](https://happygitwithr.com/)
+
+## Próximos passos
+
+Este curso cobriu os fundamentos. Para continuar aprendendo:
+
+- **Shiny**: aplicações web interativas com R
+- **tidymodels**: machine learning no tidyverse
+- **quanteda**: análise de texto político
+- **targets**: pipelines automatizados
+- **R4DS** (R for Data Science, 2ª edição): <https://r4ds.hadley.nz/>
+
+:::{.callout-tip}
+A melhor forma de consolidar o aprendizado é **aplicar R aos seus próprios dados de pesquisa**. Escolha um dataset relevante para seu tema e reproduza os exercícios deste curso com dados reais.
+:::
+
+## Exercícios — Aula 5
+
+1. Crie um documento Quarto (`.qmd`) com formato PDF contendo: um título, um parágrafo de introdução, um chunk com código R que gere um gráfico, e um chunk com uma tabela `kable`. Renderize o documento.
+
+2. Ajuste três modelos de regressão linear com a variável `perc_votos_gov` como dependente, adicionando variáveis progressivamente. Use `modelsummary()` para apresentá-los lado a lado.
+
+3. Crie um arquivo `referencias.bib` com pelo menos 3 referências (use Google Scholar para obter entradas BibTeX). Cite-as em um documento Quarto.
+
+4. Organize um mini-projeto de análise dos dados `municipios` seguindo a estrutura de pastas recomendada. O projeto deve incluir: um script de análise, um relatório Quarto, e uma pasta de resultados.
+
+---
+
+# Referências e Recursos {.unnumbered}
+
+## Livros e manuais
+
+- Wickham, H., Çetinkaya-Rundel, M. & Grolemund, G. (2023). *R for Data Science* (2ª ed.). <https://r4ds.hadley.nz/>
+- Wilke, C. (2019). *Fundamentals of Data Visualization*. <https://clauswilke.com/dataviz/>
+- Chang, W. (2023). *R Graphics Cookbook* (2ª ed.). <https://r-graphics.org/>
+- Tufte, E. (2001). *The Visual Display of Quantitative Information* (2ª ed.)
+
+## Referências em ciência política
+
+- King, G., Keohane, R. O. & Verba, S. (1994). *Designing Social Inquiry*. Princeton University Press.
+- Poole, K. T. & Rosenthal, H. (1997). *Congress: A Political-Economic History of Roll Call Voting*. Oxford University Press.
+- Zucco, C. & Lauderdale, B. (2011). Distinguishing Between Influences on Brazilian Legislative Behavior. *Legislative Studies Quarterly*, 36(3), 363-396.
+
+## Links úteis
+
+- Quarto: <https://quarto.org/>
+- Posit Cheatsheets: <https://posit.co/resources/cheatsheets/>
+- Stack Overflow (R): <https://stackoverflow.com/questions/tagged/r>
+- API Câmara dos Deputados: <https://dadosabertos.camara.leg.br/>
+- TSE Dados Abertos: <https://dadosabertos.tse.jus.br/>
+- IBGE/SIDRA: <https://sidra.ibge.gov.br/>

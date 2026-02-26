@@ -8,9 +8,7 @@
 # ==============================================================================
 
 
-# ============================================================
-# AULA 1 — Conhecendo o R
-# ============================================================
+# AULA 1 — Conhecendo o R ===========
 
 # --- R como calculadora ---
 
@@ -126,9 +124,7 @@ sqrt(sum(x))
 x |> sum() |> sqrt()
 
 
-# ============================================================
-# AULA 2 — Conhecendo seus Dados
-# ============================================================
+# AULA 2 — Conhecendo seus Dados ============
 
 # --- Setup ---
 
@@ -197,9 +193,7 @@ summary(municipios$idhm)
 # votacoes <- resp |> resp_body_json() |> pluck("dados")
 
 
-# ============================================================
-# AULA 3 — Preparando e Manipulando
-# ============================================================
+# AULA 3 — Preparando e Manipulando ===========
 
 # --- select ---
 
@@ -347,9 +341,7 @@ indicadores_uf |>
   anti_join(gov_uf, by = "uf")
 
 
-# ============================================================
-# AULA 4 — Visualizando e Mapeando
-# ============================================================
+# AULA 4 — Visualizando e Mapeando ==========
 
 # --- Gráfico de barras ---
 
@@ -531,9 +523,7 @@ ggplot(pontos, aes(x = posicao_real, y = pc1, color = bloco)) +
 #     voto = .x$tipoVoto))
 
 
-# ============================================================
-# AULA 5 — Comunicando seus Dados
-# ============================================================
+# AULA 5 — Comunicando seus Dados ===============
 
 # --- Tabelas com knitr::kable ---
 

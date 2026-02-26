@@ -76,9 +76,9 @@ Alguns motivos que fazem do R uma ferramenta valiosa para pesquisa em ciência p
 - **Integração com texto**: com Quarto (sucessor do R Markdown), é possível gerar artigos, relatórios e apresentações diretamente do R
 
 :::{.callout-note}
-## Um Excel que fez mestrado?
+## Um Excel que fez pós-graduação?
 
-É uma forma simplificada de pensar. Se algo é possível no Excel, é possível no R. Mas se algo é possível no R — ajustar um modelo multinível, estimar pontos ideais de parlamentares, gerar mapas interativos — provavelmente não é possível no Excel.
+É uma forma simplificada de pensar. Se algo é possível no Excel, é possível no R. Mas se algo é possível no R — ajustar um modelo multinível, estimar pontos ideais de parlamentares, gerar mapas interativos — não necessariamente é possível no Excel.
 :::
 
 ## Instalação

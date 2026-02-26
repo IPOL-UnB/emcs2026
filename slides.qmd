@@ -31,6 +31,15 @@ execute:
 
 ![Frederico, Gabriel e Igor Tobias](imgs/equipe.png)
 
+### Antes de tudo - Instalação
+
+Para acompanhar o curso, instale:
+
+1. **R** (≥ 4.1): <https://cran.r-project.org/>
+2. **RStudio Desktop** (gratuito): <https://posit.co/download/rstudio-desktop/>
+
+Alternativamente, é possível usar o [Posit Cloud](https://posit.cloud/), que roda no navegador e não exige instalação local.
+
 ### Passos iniciais {.smaller}
 
 - R é um software de **programação estatística**
@@ -70,6 +79,7 @@ Adquirir **autonomia** com o software — a habilidade mais importante é **sabe
 - **Assistente, não substituto:** Modelos são excelentes para explicar mensagens de erro, documentar scripts ou sugerir a estrutura inicial de um gráfico no `ggplot2`.
 - **O perigo da alucinação:** IAs podem inventar funções que não existem ou misturam o R base com o `tidyverse`. A validação humana é insubstituível.
 - **Sobre autoria, o que valia antes, vale agora:** Nunca execute ou inclua no seu script um bloco de código que você não seja capaz de explicar linha por linha. A responsabilidade metodológica e a reprodutibilidade da pesquisa são inteiramente suas.
+- Próxima fronteira: Vibe Coding.
 
 ## RStudio {background-color="#34495e"}
 
@@ -198,6 +208,20 @@ Não podemos criar etiquetas que começam com números:
 ```
 
 Cuidado com nomes de funções existentes (`c`, `sum`, `data`)
+
+### O que são funções?
+
+Se os objetos são os "substantivos" do R (as coisas que armazenamos), as **funções** são os "verbos" (as ações que executamos sobre essas coisas). 
+
+Toda função no R é identificada por um nome seguido de parênteses `()`. Dentro dos parênteses, nós inserimos os **argumentos**, que são as instruções ou os objetos que a função vai processar.
+
+```{r}
+# Criando um objeto numérico
+meu_numero <- 81
+
+# Usando a função sqrt() para calcular a raiz quadrada do objeto
+sqrt(meu_numero)
+```
 
 ### Classes
 
@@ -366,16 +390,26 @@ install.packages("foreign")   # Instalar
 library(foreign)               # Ativar (sem aspas!)
 ```
 
+
+### O Ecossistema Tidyverse
+
+O R base é extremamente poderoso, mas pode ser inconsistente. Para resolver isso, adotamos o **tidyverse**: um conjunto de pacotes para ciência de dados que compartilham a mesma filosofia de design, gramática e estrutura.
+
+A "filosofia *tidy*" baseia-se em princípios claros:
+
+- **Foco no ser humano:** O código deve ser tão fácil de ler quanto de escrever.
+- **Consistência:** As funções compartilham a mesma estrutura (o primeiro argumento é sempre a base de dados).
+- **Dados estruturados (tidy):** Tudo entra e sai no formato tabular (*data frames* ou *tibbles*).
+- **Encadeamento:** As operações são lidas passo a passo, da esquerda para a direita, utilizando o pipe (`|>`).
+
 ### Nossa abordagem no curso
+
+Para gerenciar o ecossistema e outros pacotes, substituiremos o uso tradicional de `install.packages()` e `library()` por uma solução mais eficiente voltada à reprodutibilidade.
 
 ```{r}
 #| eval: false
 pacman::p_load(tidyverse)
 ```
-
-:::{.callout-tip}
-`pacman::p_load()` instala (se necessário) **e** carrega de uma vez!
-:::
 
 ### O pipe `|>`
 
@@ -615,18 +649,13 @@ votacoes <- resp |>
 
 ### Manifesto tidyverse
 
-O tidyverse é um conjunto de pacotes que compartilham princípios do manifesto *tidy*:
+O tidyverse é um conjunto de pacotes que compartilham princípios do manifesto *tidy*: [Tidy Tools Manifesto](https://cran.r-project.org/web/packages/tidyverse/vignettes/manifesto.html).
 
-- Reutilizar estruturas de dados existentes
-- Organizar funções simples usando o pipe
-- Aderir à programação funcional
-- Projetado para ser usado por **seres humanos**
-
-Referências: [Tidy Tools Manifesto](https://cran.r-project.org/web/packages/tidyverse/vignettes/manifesto.html) | [R4DS](https://r4ds.hadley.nz/)
+Manuais Tidyverse: [R4DS](https://r4ds.hadley.nz/) | [R4DS - Português](https://pt.r4ds.hadley.nz/)
 
 ### Formato tidy
 
-Hadley Wickham <https://r4ds.hadley.nz/data-tidy>
+Hadley Wickham <https://pt.r4ds.hadley.nz/data-tidy.html>
 
 ![](imgs/tidy-1.png)
 
@@ -638,7 +667,7 @@ Hadley Wickham <https://r4ds.hadley.nz/data-tidy>
 
 ## dplyr {background-color="#34495e"}
 
-### As cinco funções do dplyr
+### Cinco funções do dplyr
 
 | Função | O que faz | Exemplo |
 |--------|-----------|---------|
@@ -657,7 +686,7 @@ municipios |>
   select(municipio, uf, regiao, idhm)
 ```
 
-### `select()` — variações úteis
+### `select()` — variações úteis {.smaller}
 
 ```{r}
 # Por padrão no nome
@@ -767,6 +796,41 @@ Usando `municipios`:
 2. Agrupe por `regiao` e `faixa_idh`
 3. Calcule o voto médio no governo e o número de municípios
 4. Ordene por voto médio decrescente
+
+## Operações em Múltiplas Colunas
+
+### O poder do `across()`
+
+Aplicar a mesma transformação em dezenas de colunas uma a uma é ineficiente. A função `across()` permite aplicar operações a várias variáveis simultaneamente dentro de `mutate()` ou `summarise()`.
+
+Ela exige dois argumentos principais:
+1. **Quais colunas** afetar (usando `starts_with()`, `everything()`, etc.)
+2. **Qual função** aplicar
+
+### `across()` no `summarise()`
+
+Podemos calcular a média de todas as colunas numéricas de uma só vez, agrupadas por região:
+
+```{r}
+municipios |>
+  group_by(regiao) |>
+  summarise(across(where(is.numeric), mean, na.rm = TRUE)) |>
+  select(regiao, idhm, pib_per_capita)
+```
+
+### Identificando Valores Ausentes
+
+Agora que conhecemos o poder do `across()`, podemos usá-lo para inspecionar a qualidade da nossa base de dados. 
+
+Para contar quantos valores ausentes (`NA`) existem em cada variável, aplicamos uma função anônima em todas as colunas simultaneamente:
+
+```{r}
+# everything() seleciona todas as colunas do dataset
+# ~ sum(is.na(.x)) avalia se o dado é NA (TRUE/FALSE) e soma os verdadeiros
+
+municipios |>
+  summarise(across(everything(), ~ sum(is.na(.x))))
+```
 
 ## tidyr {background-color="#34495e"}
 

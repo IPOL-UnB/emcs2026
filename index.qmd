@@ -1,0 +1,32 @@
+---
+title: "Escola de Métodos em Ciências Sociais 2026"
+subtitle: "Curso de R"
+author: "Frederico Bertholini"
+lang: pt-BR
+format: 
+  html:
+    self-contained: true
+    theme: solar
+    logo: logo.png
+---
+
+### Slides
+
+[Slides gerais](https://ipol-unb.github.io/emcs2026/slides.html)
+
+### Aula 1  - Conhecendo o R
+02.mar.2026 - [Slides](https://ipol-unb.github.io/emcs2026/slides.html#/aula-1-conhecendo-o-r)
+
+### Aula 2 - Conhecendo seus Dados
+03.mar.2026 - [Slides](https://ipol-unb.github.io/emcs2026/slides.html#/aula-2-conhecendo-seus-dados)
+
+### Aula 3  - Preparando e Manipulando seus Dados
+04.mar.2026 - [Slides](https://ipol-unb.github.io/emcs2026/slides.html#/aula-3-preparando-e-manipulando)
+
+### Aula 4  - Visualizando e Mapeando seus Dados
+05.mar.2026 - [Slides](https://ipol-unb.github.io/emcs2026/slides.html#/aula-4-visualizando-e-mapeando)
+
+### Aula 5  - Comunicando seus Dados
+06.mar.2026 - [Slides](https://ipol-unb.github.io/emcs2026/slides.html#/aula-5-comunicando-seus-dados)
+
+

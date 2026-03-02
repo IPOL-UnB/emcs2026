@@ -747,10 +747,34 @@ dados_com_dup |>
   distinct(municipio, uf, .keep_all = TRUE)
 ```
 
-### Valores ausentes
+### Operações em múltiplas colunas com `across()`
+
+Aplicar a mesma transformação em dezenas de colunas uma a uma é ineficiente. A função `across()` resolve isso permitindo aplicar operações a várias variáveis simultaneamente dentro de `mutate()` ou `summarise()`. Ela exige dois argumentos principais: quais colunas afetar (usando seletores como `where(is.numeric)`, `starts_with()`, `everything()`) e qual função aplicar.
+
+Por exemplo, para calcular a média de todas as colunas numéricas agrupadas por região:
 
 ```{r}
-# Contar NAs por coluna
+municipios |>
+  group_by(regiao) |>
+  summarise(across(where(is.numeric), mean, na.rm = TRUE)) |>
+  select(regiao, idhm, pib_per_capita)
+```
+
+O `across()` também aceita funções anônimas com a sintaxe `~ f(.x)`. Isso é especialmente útil para operações mais complexas, como padronizar variáveis:
+
+```{r}
+#| eval: false
+municipios |>
+  mutate(across(where(is.numeric), ~ (.x - mean(.x, na.rm = TRUE)) / sd(.x, na.rm = TRUE)))
+```
+
+### Valores ausentes
+
+Com o `across()`, podemos inspecionar a qualidade da base de dados contando quantos valores ausentes (`NA`) existem em cada variável:
+
+```{r}
+# everything() seleciona todas as colunas
+# ~ sum(is.na(.x)) avalia se o dado é NA e soma os verdadeiros
 municipios |>
   summarise(across(everything(), ~ sum(is.na(.x))))
 ```

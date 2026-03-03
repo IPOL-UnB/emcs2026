@@ -101,20 +101,31 @@ n.pares[n.pares >= 5] * 2
 
 # --- data.frame ---
 
-df <- data.frame(
+# Carrega o ecossistema tidyverse
+pacman::p_load(tidyverse)
+
+# Cria o conjunto de dados com a sintaxe corrigida
+df <- tibble(
   nome = c("SP", "RJ", "MG"),
   populacao = c(46, 17, 21),
+  partido = factor(c("REP", "PL", "NOVO")),
   regiao = c("Sudeste", "Sudeste", "Sudeste")
 )
-df$populacao
+# rm(df)
+
+min(df$populacao)
+"DF" %in% df$nome
+
+dim(df)
+str(df)
 
 # --- Pacotes ---
 
-# install.packages("foreign")   # instala
+# install.packages("pacman")   # instala
 # library(foreign)               # ativa
 
 # Nossa abordagem:
-# pacman::p_load(tidyverse)
+pacman::p_load(tidyverse)
 
 # --- Pipe |> ---
 
@@ -124,7 +135,9 @@ x <- c(1, 2, 3, 4)
 sqrt(sum(x))
 
 # Com pipe:
-x |> sum() |> sqrt()
+x |> 
+  sum() |> 
+  sqrt()
 
 
 # AULA 2 — Conhecendo seus Dados ============

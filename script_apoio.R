@@ -6,13 +6,13 @@
 # Este script acompanha os slides do curso.
 # Abra-o no RStudio e vá rodando linha a linha com Ctrl+Enter (Cmd+Enter no Mac).
 # ==============================================================================
-
+a
 
 # AULA 1 — Conhecendo o R ===========
 
 # --- R como calculadora ---
 
-5 + 5
+5 + 5 
 5 - 3
 4 * 9
 16 / 2
@@ -42,9 +42,10 @@ TRUE <= FALSE
 (3 != 3) | (4 != 5)
 
 # --- Criação de objetos ---
-
+sorte = 5
 sorte <- 5
-sorte
+8 -> azar
+sorte + 2
 
 class(sorte)
 
@@ -64,6 +65,8 @@ nome <- "Frederico"
 class(nome)
 
 partido <- factor(c("PT", "PL", "MDB", "PT", "PL"))
+partido <- c("PT", "PL", "MDB", "PT", "PL")
+partido_fator <- factor(partido)
 levels(partido)
 
 # --- Vetores ---

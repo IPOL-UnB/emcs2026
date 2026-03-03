@@ -14,6 +14,9 @@ format:
 
 [Slides gerais](https://ipol-unb.github.io/emcs2026/slides.html)
 
+### Apostila
+[Apostila](https://ipol-unb.github.io/emcs2026/apostila_emcs2026.html)
+
 ### Aula 1  - Conhecendo o R
 02.mar.2026 - [Slides](https://ipol-unb.github.io/emcs2026/slides.html#/aula-1-conhecendo-o-r)
 

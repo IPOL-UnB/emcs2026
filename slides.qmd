@@ -519,6 +519,10 @@ Com um RProject aberto, `getwd()` retorna a pasta do projeto — e todos os cami
 | `.dta` (Stata) | `read_dta()` | haven |
 | `.rds` | `read_rds()` | readr |
 
+### Baixando o dataset
+
+[https://github.com/IPOL-UnB/emcs2026/blob/main/dados/municipios_br.csv](https://github.com/IPOL-UnB/emcs2026/blob/main/dados/municipios_br.csv)
+
 ### Lendo nosso dataset do curso
 
 O arquivo `municipios_br.csv` está na pasta `dados/` do projeto:

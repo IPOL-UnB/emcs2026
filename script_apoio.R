@@ -162,6 +162,8 @@ getwd()
 # --- Importação: nosso dataset ---
 
 municipios <- read_csv("dados/municipios_br.csv")
+url_mun <- "https://raw.githubusercontent.com/IPOL-UnB/emcs2026/refs/heads/main/dados/municipios_br.csv"
+municipios <- read_csv(url_mun)
 
 # --- Explorando ---
 
@@ -185,7 +187,7 @@ summary(municipios$idhm)
 # --- Salvando dados ---
 
 # write_csv(municipios, "dados/municipios_processados.csv")
-# write_rds(municipios, "dados/municipios_processados.rds")
+write_rds(municipios, "dados/municipios_processados.rds")
 
 # --- electionsBR ---
 
@@ -216,25 +218,26 @@ summary(municipios$idhm)
 municipios |>
   select(municipio, uf, regiao, idhm)
 
-municipios |>
-  select(starts_with("perc"))
+municipio_var_ <- municipios |>
+  select(contains("_"))
 
 municipios |>
   select(-populacao, -gini)
 
 # --- filter ---
 
-municipios |>
+nordeste_mun <- municipios |>
+  select(municipio, uf, regiao, idhm) |>
   filter(regiao == "Nordeste", idhm > 0.7)
 
 municipios |>
   filter(uf %in% c("SP", "RJ", "MG")) |>
   select(municipio, uf, perc_votos_gov) |>
-  head(8)
+  head(12)
 
 # --- mutate ---
 
-municipios |>
+medios_idh <- municipios |>
   mutate(
     margem_vitoria = abs(perc_votos_gov - 50),
     competitivo = margem_vitoria < 10,
@@ -243,36 +246,47 @@ municipios |>
       idhm < 0.70 ~ "Baixo",
       idhm < 0.80 ~ "Médio",
       TRUE ~ "Alto"
-    )
+    ),
+    faixa_idh_factor = factor(faixa_idh)
   ) |>
-  select(municipio, margem_vitoria, competitivo, faixa_idh) |>
-  head(6)
+  filter(faixa_idh == "Médio") |> 
+  select(municipio, margem_vitoria, competitivo, faixa_idh,faixa_idh_factor) # |>head(6)
 
 municipios |>
   mutate(
     log_pop = log(populacao),
-    idhm_padronizado = (idhm - mean(idhm)) / sd(idhm),
+    idhm_padronizado = (idhm - mean(idhm,na.rm=T)) / sd(idhm),
     ranking_idhm = min_rank(desc(idhm))
   ) |>
-  select(municipio, log_pop, idhm_padronizado, ranking_idhm) |>
-  head(6)
+  select(municipio, log_pop, idhm_padronizado, ranking_idhm) |> 
+  arrange(ranking_idhm) |> 
+  head(10)
 
 # --- summarise + group_by ---
 
 municipios |>
   group_by(regiao) |>
   summarise(
-    n = n(),
+    qtd_municip = n(),
     idhm_medio = mean(idhm) |> round(3),
     voto_gov_medio = mean(perc_votos_gov) |> round(1),
     comparecimento = mean(taxa_comparecimento) |> round(2)
   )
 
+municipios |>
+  summarise(
+    n = n(),
+    idhm_medio = mean(idhm) |> round(3),
+    voto_gov_medio = mean(perc_votos_gov) |> round(1),
+    comparecimento = mean(taxa_comparecimento) |> round(2),
+    .by=regiao
+  )
+
 # --- count ---
 
 municipios |>
-  count(regiao, sort = TRUE) |>
-  mutate(prop = n / sum(n),
+  count(regiao) |>
+  mutate(prop = prop.table(n),
          prop = scales::percent(prop))
 
 # --- arrange ---
@@ -288,13 +302,59 @@ municipios |>
 # 3. Calcule o voto médio no governo e o número de municípios
 # 4. Ordene por voto médio decrescente
 
+resultado <- municipios  |> 
+  mutate(
+    faixa_idh = case_when(
+      idhm < 0.6 ~ "Baixo",
+      idhm >= 0.6 & idhm <= 0.75 ~ "Médio",
+      idhm > 0.75 ~ "Alto"
+    )
+  )   |> 
+  group_by(regiao, faixa_idh)  |> 
+  summarise(
+    voto_medio_governo = mean(perc_votos_gov),
+    n_municipios = n()
+  ) |> 
+  arrange(desc(voto_medio_governo))
+
+resultado <- municipios  |> 
+  mutate(
+    faixa_idh = cut(
+      idhm,
+      breaks = c(-Inf, 0.6, 0.75, Inf),
+      labels = c("Baixo", "Médio", "Alto"),
+      right = FALSE
+    )
+  )  |> 
+  group_by(regiao, faixa_idh)  |> 
+  summarise(
+    voto_medio_governo = mean(perc_votos_gov, na.rm = TRUE),
+    n_municipios = n()
+  ) |> 
+  arrange(desc(voto_medio_governo))
+
+resultado
+
+# --- across ---
+municipios |>
+  group_by(regiao) |>
+  summarise(across(where(is.numeric), mean, na.rm = TRUE)) #|>
+  # select(regiao, idhm, pib_per_capita)
 
 
 # --- tidyr: pivot_wider ---
 
 votos_wide <- municipios |>
-  mutate(faixa_idh = cut(idhm, breaks = c(0, 0.6, 0.75, 1),
-                          labels = c("Baixo","Médio","Alto"))) |>
+  mutate(
+    faixa_idh = case_when(
+      idhm < 0.6 ~ "Baixo",
+      idhm <= 0.75 ~ "Médio",
+      TRUE ~ "Alto"
+    ),
+    faixa_idh=factor(
+      faixa_idh,labels = 
+        c("Baixo","Médio","Alto"),ordered = T)
+  )   |> 
   group_by(regiao, faixa_idh) |>
   summarise(voto_medio = mean(perc_votos_gov) |> round(1), .groups = "drop") |>
   pivot_wider(names_from = faixa_idh, values_from = voto_medio)
@@ -304,26 +364,36 @@ votos_wide
 # --- tidyr: pivot_longer ---
 
 votos_wide |>
-  pivot_longer(-regiao, names_to = "faixa_idh", values_to = "voto_medio")
+  pivot_longer(-regiao, 
+               names_to = "faixa_idh", 
+               values_to = "voto_medio")
 
 # --- separate e unite ---
 
 mun_cod <- municipios |>
-  mutate(uf_regiao = paste(uf, regiao, sep = "-")) |>
-  select(municipio, uf_regiao) |>
-  head(6)
+  unite("regiao_uf",regiao,uf,  sep = " ",remove=T) |> 
+  select(cod_ibge,regiao_uf)
+
+
 
 mun_cod
 
 mun_cod |>
-  separate(uf_regiao, into = c("uf", "regiao"), sep = "-")
+  separate(regiao_uf, into = c("regiao", "uf"), sep = " ") 
 
 # --- duplicatas e limpeza ---
+
+dados <- municipios |> 
+  transmute(
+    `Município de Referência` = municipio,
+    IDHm = idhm,
+    `Região` = regiao
+  )
 
 municipios |>
   distinct(regiao)
 
-# dados |> janitor::clean_names()
+dados_clean <- dados |> janitor::clean_names()
 # dados |> janitor::get_dupes(municipio)
 
 # --- valores ausentes ---
@@ -334,8 +404,8 @@ municipios |>
 # --- joins ---
 
 indicadores_uf <- municipios |>
-  group_by(uf) |>
-  summarise(idhm_medio = mean(idhm) |> round(3), .groups = "drop") |>
+  summarise(idhm_medio = mean(idhm) |> round(3), 
+            .by = uf) |>
   head(6)
 
 gov_uf <- tibble(
@@ -356,30 +426,53 @@ indicadores_uf |>
 indicadores_uf |>
   anti_join(gov_uf, by = "uf")
 
+# right join
+indicadores_uf |>
+  right_join(gov_uf)
+
+# full join
+indicadores_uf |>
+  full_join(gov_uf)
+
+
 
 # AULA 4 — Visualizando e Mapeando ==========
 
 # --- Gráfico de barras ---
 
-municipios |>
-  group_by(regiao) |>
-  summarise(voto_medio = mean(perc_votos_gov)) |>
-  ggplot(aes(x = reorder(regiao, voto_medio), y = voto_medio, fill = regiao)) +
-  geom_col() +
-  coord_flip() +
+dados_graficos_regiao <- municipios |>
+  group_by(uf,regiao) |>
+  summarise(voto_medio = mean(perc_votos_gov)) 
+
+dados_graficos_regiao |>
+  ggplot(
+    aes(y = reorder(uf, desc(voto_medio)) , 
+        x = voto_medio,
+        fill = regiao)) +
+  geom_bar(alpha=.7,stat="identity") +
+  geom_text(aes(label=round(voto_medio,0)),
+            hjust=1,fontface="bold",
+            size = 3) +
+  facet_wrap(vars(regiao),scales="free_y") +
   labs(title = "Votação Média no Governo por Região",
-       x = "", y = "% Votos no Governo") +
+       subtitle = "Brasil, Eleição 1998",
+       caption = "Fonte: IPEA, 2026",
+       y = "", x = "% Votos no Governo",fill="") +
+  scale_fill_manual(values = 
+                      c("#1d2342","indianred4","#9e55f0",
+                        "#0d1b1e","darkseagreen")) +
   theme_minimal() +
   theme(legend.position = "none")
 
-# --- Dispersão: IDH x Voto (Lipset, 1959) ---
+# --- Dispersão: IDH x Voto ---
 
-municipios |>
+municipios |> # filter(uf=="RJ") |> 
   ggplot(aes(x = idhm, y = perc_votos_gov, color = regiao)) +
   geom_point(alpha = 0.5) +
-  geom_smooth(method = "lm", se = FALSE, color = "black", linetype = "dashed") +
-  labs(title = "Modernização e Voto: a Tese de Lipset",
+  geom_smooth(method = "lm", se = F, color = "indianred4",linewidth = 2) +
+  labs(title = "Desenvolvimento local e apoio ao incumbente",
        x = "IDHM", y = "% Votos no Governo", color = "Região") +
+  ggthemes::scale_color_tableau("Tableau 10") +
   theme_minimal()
 
 # --- Histograma ---
@@ -448,7 +541,7 @@ p1 + p2 + plot_annotation(title = "Dashboard Eleitoral")
 
 # --- Mapas: sf + geobr ---
 
-estados_br <- read_state(year = 2020, showProgress = FALSE)
+estados_br <- geobr::read_state(year = 2020, showProgress = FALSE)
 
 # Mapa coroplético
 dados_uf <- municipios |>
@@ -458,7 +551,8 @@ dados_uf <- municipios |>
 mapa <- estados_br |>
   left_join(dados_uf, by = c("abbrev_state" = "uf"))
 
-ggplot(mapa) +
+mapa |> 
+  ggplot() +
   geom_sf(aes(fill = voto_medio), color = "white", linewidth = 0.2) +
   scale_fill_gradient2(low = "steelblue", mid = "white", high = "firebrick",
                        midpoint = 50, name = "% Gov") +
@@ -469,10 +563,12 @@ ggplot(mapa) +
 capitais_geo <- read_municipal_seat(showProgress = FALSE)
 
 ggplot() +
-  geom_sf(data = estados_br, fill = "grey95", color = "grey60") +
-  geom_sf(data = capitais_geo, color = "firebrick", size = 1.5, alpha = 0.7) +
+  geom_sf(data = estados_br |> 
+            filter(abbrev_state=="RJ"), fill = "grey95", color = "grey60") +
+  geom_sf(data = capitais_geo|> 
+            filter(abbrev_state=="RJ"), color = "firebrick", size = 1.5, alpha = 0.7) +
   theme_void() +
-  labs(title = "Capitais Brasileiras")
+  labs(title = "Municípios Brasileiros")
 
 
 # --- Pontos Ideais ---
